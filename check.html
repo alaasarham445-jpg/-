@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>فحص PWA — وتر</title>
+<link rel="icon" type="image/png" href="favicon-32.png">
+<style>
+:root{--bg:#f4f5fa;--ink:#101018;--card:#fff;--line:rgba(60,60,90,.15);--ok:#15803d;--bad:#b91c1c;--warn:#b45309}
+@media (prefers-color-scheme:dark){:root{--bg:#07070d;--ink:#fff;--card:#15151f;--line:rgba(255,255,255,.14);--ok:#4ade80;--bad:#f87171;--warn:#fbbf24}}
+*{box-sizing:border-box}
+body{margin:0;padding:16px;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;line-height:1.6}
+h1{font-size:20px;margin:0 0 12px}
+h2{font-size:15px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 12px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.row:last-child{border-bottom:0}
+.row span:first-child{direction:ltr;unicode-bidi:plaintext;word-break:break-all}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}.warn{color:var(--warn);font-weight:700}
+button{font:inherit;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;margin:0 0 0 6px}
+#sum{font-weight:700;margin:0 0 12px}
+</style>
+</head>
+<body>
+<h1>فحص التثبيت والعمل دون إنترنت</h1>
+<div id="sum">جارٍ الفحص…</div>
+<div class="card"><h2>الملفات</h2><div id="files"></div></div>
+<div class="card"><h2>Service Worker</h2><div id="sw"></div></div>
+<div class="card"><h2>Manifest</h2><div id="mf"></div></div>
+<div class="card"><h2>التخزين</h2><div id="st"></div></div>
+<button id="rerun">إعادة الفحص</button>
+<button id="reg">تسجيل الـ Service Worker</button>
+<script>
+(function(){
+var FILES=["index.html","manifest.webmanifest","sw.js","storage.js","check.html","icon-192.png","icon-512.png","maskable-192.png","maskable-512.png","apple-touch-icon.png","favicon-32.png"];
+var total=0,fails=0;
+function $(i){return document.getElementById(i)}
+function row(box,label,ok,txt,warn){
+  total++;if(!ok&&!warn)fails++;
+  var d=document.createElement("div");d.className="row";
+  var a=document.createElement("span");a.textContent=label;
+  var b=document.createElement("span");b.className=ok?"ok":(warn?"warn":"bad");b.textContent=txt||(ok?"✓ سليم":"✗ مفقود");
+  d.appendChild(a);d.appendChild(b);$(box).appendChild(d);
+}
+function img(src){return new Promise(function(r){var i=new Image();i.onload=function(){r([i.naturalWidth,i.naturalHeight])};i.onerror=function(){r(null)};i.src=src+"?c="+Date.now()})}
+
+async function run(){
+  total=0;fails=0;["files","sw","mf","st"].forEach(function(i){$(i).innerHTML=""});$("sum").textContent="جارٍ الفحص…";$("sum").className="";
+
+  // الملفات
+  for(var i=0;i<FILES.length;i++){
+    var f=FILES[i];
+    try{var r=await fetch(f,{cache:"no-store"});row("files",f,r.ok,r.ok?"✓ موجود ("+r.status+")":"✗ "+r.status)}
+    catch(e){row("files",f,false,"✗ تعذّر الجلب")}
+  }
+
+  // Service Worker
+  var sec=window.isSecureContext;
+  row("sw","سياق آمن (HTTPS/localhost)",sec,sec?"✓ نعم":"✗ لا");
+  var reg=null;
+  if("serviceWorker" in navigator){
+    try{reg=await navigator.serviceWorker.getRegistration()}catch(e){}
+    row("sw","التسجيل",!!reg,reg?"✓ مسجّل — النطاق: "+reg.scope:"✗ غير مسجّل (افتح index.html أولًا أو اضغط تسجيل)");
+    if(reg){
+      var w=reg.active||reg.waiting||reg.installing;
+      row("sw","الحالة",!!(reg.active),w?(reg.active?"✓ active":"… "+w.state):"✗ لا نسخة");
+      row("sw","يتحكم بهذه الصفحة",!!navigator.serviceWorker.controller,navigator.serviceWorker.controller?"✓ نعم":"… لا (أعد تحميل الصفحة مرة)",!navigator.serviceWorker.controller);
+    }
+    try{
+      var t=await (await fetch("sw.js",{cache:"no-store"})).text();
+      var m=t.split("\n")[0].match(/VERSION\s*=\s*['"]([^'"]+)['"]/);
+      row("sw","رقم النسخة (أول سطر)",!!m,m?"✓ "+m[1]:"✗ غير موجود في السطر الأول");
+      row("sw","معالج fetch",/addEventListener\(\s*['"]fetch['"]/.test(t),null);
+      row("sw","تخزين مسبق عند التثبيت",/addEventListener\(\s*['"]install['"]/.test(t)&&/\.add(All)?\(/.test(t),null);
+    }catch(e){row("sw","قراءة sw.js",false,"✗ تعذّر")}
+    try{
+      var ks=await caches.keys();var n=0;
+      for(var k=0;k<ks.length;k++){if(ks[k].indexOf("watar-v")===0){n=(await (await caches.open(ks[k])).keys()).length}}
+      row("sw","عناصر الذاكرة المؤقتة",n>=FILES.length-1,n+" عنصر",n<FILES.length-1&&n>0);
+    }catch(e){}
+  }else row("sw","دعم Service Worker",false,"✗ غير مدعوم");
+
+  // Manifest
+  var lk=document.querySelector('link[rel=manifest]');
+  var mfUrl="manifest.webmanifest";
+  try{
+    var mj=await (await fetch(mfUrl,{cache:"no-store"})).json();
+    row("mf","JSON صالح",true);
+    ["name","short_name","start_url","scope","display","lang","dir"].forEach(function(k){row("mf",k,!!mj[k],mj[k]?"✓ "+mj[k]:"✗ ناقص")});
+    row("mf","display = standalone",mj.display==="standalone",null);
+    row("mf","start_url بلا مجلدات",/^\.\/[^\/]+$/.test(mj.start_url||""),null);
+    var ic=mj.icons||[];
+    row("mf","عدد الأيقونات",ic.length>=4,ic.length+"",ic.length<4);
+    var any192=0,any512=0,m192=0,m512=0;
+    for(var j=0;j<ic.length;j++){
+      var c=ic[j],sz=await img(c.src),want=(c.sizes||"").split("x").map(Number);
+      var okS=!!sz&&sz[0]===want[0]&&sz[1]===want[1];
+      row("mf",c.src+" ["+(c.purpose||"any")+"]",okS&&c.src.indexOf("/")<0,okS?"✓ "+sz[0]+"×"+sz[1]:"✗ المقاس/المسار");
+      if(okS){if(c.purpose==="maskable"){if(want[0]===192)m192=1;if(want[0]===512)m512=1}else{if(want[0]===192)any192=1;if(want[0]===512)any512=1}}
+    }
+    row("mf","أيقونات 192/512 (any)",any192&&any512,null);
+    row("mf","أيقونات 192/512 (maskable)",m192&&m512,null);
+  }catch(e){row("mf","قراءة manifest",false,"✗ "+e.message)}
+  try{
+    var idx=await (await fetch("index.html",{cache:"no-store"})).text();
+    row("mf","index.html يربط manifest",/rel=["']manifest["']\s+href=["']manifest\.webmanifest["']/.test(idx),null);
+    row("mf","index.html يسجّل sw.js",/serviceWorker\.register\(["']sw\.js["']/.test(idx),null);
+    row("mf","index.html يحمّل storage.js",/src=["']storage\.js["']/.test(idx),null);
+  }catch(e){}
+
+  // التخزين
+  var per=null;try{per=navigator.storage&&navigator.storage.persisted?await navigator.storage.persisted():null}catch(e){}
+  row("st","تخزين دائم (persist)",per===true,per===true?"✓ ممنوح":(per===false?"… غير ممنوح بعد (يُمنح غالبًا بعد التثبيت)":"غير مدعوم"),per!==true);
+  try{
+    var st=await (await fetch("storage.js",{cache:"no-store"})).text();
+    row("st","storage.js يطلب persist()",/storage\.persist\(/.test(st),null);
+    row("st","storage.js ينسخ إلى IndexedDB",/indexedDB\.open/.test(st)&&/localStorage/.test(st),null);
+  }catch(e){row("st","قراءة storage.js",false,"✗ تعذّر")}
+  try{
+    var db=await new Promise(function(res,rej){var q=indexedDB.open("pwa-ls-backup",1);q.onupgradeneeded=function(){q.result.createObjectStore("kv")};q.onsuccess=function(){res(q.result)};q.onerror=function(){rej(q.error)}});
+    var v=await new Promise(function(res){var q=db.transaction("kv","readonly").objectStore("kv").get("localStorage");q.onsuccess=function(){res(q.result)};q.onerror=function(){res(null)}});
+    db.close();
+    row("st","نسخة IndexedDB الاحتياطية",!!v,v?"✓ "+Object.keys(v).length+" مفتاح":"… لم تُنشأ بعد (افتح التطبيق مرة)",!v);
+  }catch(e){row("st","IndexedDB",false,"✗ "+e.message)}
+
+  $("sum").textContent=fails?("✗ "+fails+" فحص فاشل من "+total):("✓ كل الفحوصات ناجحة ("+total+")");
+  $("sum").className=fails?"bad":"ok";
+}
+$("rerun").onclick=run;
+$("reg").onclick=function(){if(!("serviceWorker" in navigator))return;navigator.serviceWorker.register("sw.js").then(function(){setTimeout(run,800)}).catch(function(e){alert(e.message)})};
+run();
+})();
+</script>
+</body>
+</html>
