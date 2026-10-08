@@ -481,9 +481,29 @@ html.calm .simple-vis i{transition-duration:.01ms}
 .row .ib.s2 svg{stroke-width:2.4}
 .chips{margin-inline:-18px;padding-inline:18px;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 16px,#000 calc(100% - 16px),transparent 100%)}
 body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(170px + env(safe-area-inset-bottom,0px));background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--bg) 60%,transparent));pointer-events:none;z-index:4}
+
+/* ===== شاشة الترحيب ===== */
+#splash{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:var(--bg);color:var(--ink);overflow:hidden;transition:opacity .6s ease,transform .6s var(--sp),visibility .6s}
+#splash.out{opacity:0;visibility:hidden;transform:scale(1.06);pointer-events:none}
+#splash .sb{position:absolute;width:70vmax;height:70vmax;border-radius:50%;filter:blur(90px);opacity:.35;background:#b8f01c;animation:dr 6s ease-in-out infinite alternate}
+#splash .sb.s1{top:-25vmax;right:-20vmax}
+#splash .sb.s2{bottom:-30vmax;left:-25vmax;animation-delay:-3s;opacity:.22}
+#splash .sp-in{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px}
+#splash .sp-logo{width:132px;height:132px;display:block;filter:drop-shadow(0 18px 30px rgba(150,220,0,.45));animation:spPop .9s var(--bn) both}
+#splash h2{margin:26px 0 6px;font-size:3rem;font-weight:700;letter-spacing:-.5px;animation:spUp .8s .25s var(--sp) both}
+#splash p{margin:0;color:var(--mute);font-size:1rem;font-weight:600;animation:spUp .8s .4s var(--sp) both}
+#splash .sp-bar{width:140px;height:4px;margin-top:42px;border-radius:4px;background:var(--line);overflow:hidden;animation:spUp .8s .5s var(--sp) both}
+#splash .sp-bar i{display:block;height:100%;width:100%;border-radius:4px;background:linear-gradient(90deg,#d8ff3a,#8fe000);transform-origin:right;animation:spFill 3s linear both}
+@keyframes spPop{from{opacity:0;transform:scale(.55) rotate(-8deg)}}
+@keyframes spUp{from{opacity:0;transform:translateY(18px)}}
+@keyframes spFill{from{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){#splash .sb{animation:none}}
+html.lm{--on:#10140a}
 </style>
 </head>
 <body>
+<div id="splash" role="presentation"><i class="sb s1"></i><i class="sb s2"></i><div class="sp-in"><img class="sp-logo" src="splash-icon.png" alt="" width="132" height="132"><h2>وتر</h2><p>موسيقاك في مكان واحد</p><div class="sp-bar"><i></i></div></div></div>
+<script>setTimeout(function(){var e=document.getElementById('splash');if(!e)return;e.classList.add('out');setTimeout(function(){e.remove()},700)},3000)</script>
 <div id="bgc"><i class="bl b1"></i><i class="bl b2"></i></div>
 <div id="app">
  <div class="top"><button class="ib gl" id="back" hidden aria-label="رجوع"></button><h1 id="h1">المكتبة</h1><button class="ib gl" id="act" aria-label="إضافة"></button></div>
@@ -768,7 +788,7 @@ function rm(a){
  for(k in M.plays)pt+=M.plays[k];
  var st=[[T.length,"أغنية"],[M.art.length,"فنان"],[fv2,"مفضلة"],[pt,"تشغيل"]];
  var seg=[["auto","تلقائي"],["light","فاتح"],["dark","داكن"]].map(function(o){return'<button class="'+(G.theme==o[0]?"on":"")+'" data-me="theme" data-val="'+o[0]+'">'+o[1]+'</button>'}).join("");
-  var sw='<button class="auto'+(G.hue==null?" on":"")+'" data-me="hue" data-val="auto" aria-label="يتبع الغلاف"></button>'+[340,12,45,150,200,260].map(function(h){return'<button class="'+(G.hue===h?"on":"")+'" data-me="hue" data-val="'+h+'" style="background:hsl('+h+' 72% 55%)" aria-label="لون"></button>'}).join("")+'<button class="mix" data-me="hues" aria-label="كل الألوان"></button>';
+  var sw='<button class="auto'+(G.hue==null?" on":"")+'" data-me="hue" data-val="auto" aria-label="يتبع الغلاف"></button>'+[340,12,45,"lime",150,200,260].map(function(h){var L=h=="lime",hv=L?74:h;return'<button class="'+((L?(G.hue===74&&G.sat===100):(G.hue===h))?"on":"")+'" data-me="hue" data-val="'+h+'" style="background:hsl('+hv+(L?' 100% 52%':' 72% 55%')+')" aria-label="'+(L?"ليموني":"لون")+'"></button>'}).join("")+'<button class="mix" data-me="hues" aria-label="كل الألوان"></button>';
  var hp='<div class="hp" id="hp"><div class="hpv"><i class="hpc" id="hpc"></i><b id="hpx"></b></div><label class="hps"><span>اللون</span><input type="range" id="hr" min="0" max="359" value="'+(G.hue==null?340:G.hue)+'"></label><label class="hps"><span>التشبّع</span><input type="range" id="hs" min="0" max="100" value="'+(G.sat==null?72:G.sat)+'"></label><label class="hps"><span>السطوع</span><input type="range" id="hlt" min="25" max="75" value="'+(G.lt==null?50:G.lt)+'"></label></div>';
  var row=function(e,i,t){return'<button class="si" data-me="'+e+'">'+ic(i)+'<span>'+t+'</span></button>'};
   var tgl=function(k,t,on){return'<div class="st"><span>'+t+'</span><button class="tgl'+(on?" on":"")+'" data-me="'+k+'" role="switch" aria-label="'+t+'"></button></div>'};
@@ -793,7 +813,7 @@ $("me").innerHTML=cs?setH:'<div class="pf gl"><button class="av" data-me="img" a
 function moveSeg(){document.querySelectorAll(".seg").forEach(function(g){var a=g.querySelector("button.on"),i=g.querySelector(".sind");if(a&&i&&a.offsetWidth){i.style.width=a.offsetWidth+"px";i.style.transform="translateX("+a.offsetLeft+"px)"}})}
 function setTC(){var m=document.getElementById("tc");if(m)m.content=getComputedStyle(document.body).backgroundColor}
 try{matchMedia("(prefers-color-scheme:dark)").addEventListener("change",setTC)}catch(e){}
-function applySet(){$("np").setAttribute("data-layout","calm");var G=M.set,r=document.documentElement;if(G.theme=="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",G.theme);r.classList.toggle("calm",!!G.calm);setTC();if(G.hue!=null)tintG();else if(cur())art()}
+function applySet(){$("np").setAttribute("data-layout","calm");var G=M.set,r=document.documentElement;if(G.theme=="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",G.theme);r.classList.toggle("calm",!!G.calm);r.classList.toggle("lm",G.hue===74&&G.sat===100);setTC();if(G.hue!=null)tintG();else if(cur())art()}
 function dl(t){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([t],{type:"application/json"}));a.download="music-backup-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();toast("جاري تنزيل الملف")}
 function cp(t){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast("تم نسخ النص")},function(){toast("حدّد النص من المربع وانسخه يدويًا")})}
 function exp(){
@@ -820,7 +840,7 @@ function handleMe(x){
  else if(d.me=="imp")imp();
  else if(d.me=="clr")sheet("مسح التخزين؟",[["نعم، امسح الأغاني المخزّنة",function(){idbRun("readwrite",function(o){return o.clear()}).then(function(){location.reload()})},1,"trash"]]);
  else if(d.me=="theme"){G.theme=d.val;save();applySet();on();moveSeg()}
- else if(d.me=="hue"){G.hue=d.val=="auto"?null:+d.val;save();G.sat=72;G.lt=null;document.documentElement.style.removeProperty("--l");applySet();document.querySelectorAll('[data-me="hue"]').forEach(function(b){b.classList.toggle("on",b==x)});if($("hr")){if(G.hue!=null)$("hr").value=G.hue;$("hs").value=72;$("hlt").value=50;hpUI()}}
+ else if(d.me=="hue"){var lm=d.val=="lime";G.hue=d.val=="auto"?null:lm?74:+d.val;G.sat=lm?100:72;G.lt=lm?57:null;save();document.documentElement.style.removeProperty("--l");applySet();document.querySelectorAll('[data-me="hue"]').forEach(function(b){b.classList.toggle("on",b==x)});if($("hr")){if(G.hue!=null)$("hr").value=G.hue;$("hs").value=G.sat;$("hlt").value=G.lt==null?50:G.lt;hpUI()}}
  else if(d.me=="hues"){var hp2=$("hp");hp2.classList.toggle("open");hpUI();x.classList.toggle("on",hp2.classList.contains("open"))}
  else if(d.me=="calm"){G.calm=G.calm?0:1;save();applySet();x.classList.toggle("on",!!G.calm)}
  else if(d.me=="sec"){stSec=d.val||null;document.body.scrollTop=0;scrollTo(0,0);rm(true)}
