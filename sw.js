@@ -1,4 +1,4 @@
-const VERSION = 'v1.1.0';
+const VERSION = 'v1.3.0';
 const CACHE = 'watar-' + VERSION;
 const FONT_CACHE = 'watar-fonts';
 const FONT_CSS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap';
@@ -13,7 +13,8 @@ const FILES = [
   'maskable-192.png',
   'maskable-512.png',
   'apple-touch-icon.png',
-  'favicon-32.png'
+  'favicon-32.png',
+  'splash-icon.png'
 ];
 
 self.addEventListener('install', function (e) {
