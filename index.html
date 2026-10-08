@@ -493,7 +493,7 @@ body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(170px 
 #splash h2{margin:26px 0 6px;font-size:3rem;font-weight:700;letter-spacing:-.5px;animation:spUp .8s .25s var(--sp) both}
 #splash p{margin:0;color:var(--mute);font-size:1rem;font-weight:600;animation:spUp .8s .4s var(--sp) both}
 #splash .sp-bar{width:140px;height:4px;margin-top:42px;border-radius:4px;background:var(--line);overflow:hidden;animation:spUp .8s .5s var(--sp) both}
-#splash .sp-bar i{display:block;height:100%;width:100%;border-radius:4px;background:linear-gradient(90deg,#d8ff3a,#8fe000);transform-origin:right;animation:spFill 3s linear both}
+#splash .sp-bar i{display:block;height:100%;width:100%;border-radius:4px;background:linear-gradient(90deg,#d8ff3a,#8fe000);transform-origin:right;animation:spFill 1.5s linear both}
 @keyframes spPop{from{opacity:0;transform:scale(.55) rotate(-8deg)}}
 @keyframes spUp{from{opacity:0;transform:translateY(18px)}}
 @keyframes spFill{from{transform:scaleX(0)}}
@@ -503,7 +503,7 @@ html.lm{--on:#10140a}
 </head>
 <body>
 <div id="splash" role="presentation"><i class="sb s1"></i><i class="sb s2"></i><div class="sp-in"><img class="sp-logo" src="splash-icon.png" alt="" width="132" height="132"><h2>وتر</h2><p>موسيقاك في مكان واحد</p><div class="sp-bar"><i></i></div></div></div>
-<script>setTimeout(function(){var e=document.getElementById('splash');if(!e)return;e.classList.add('out');setTimeout(function(){e.remove()},700)},3000)</script>
+<script>setTimeout(function(){var e=document.getElementById('splash');if(!e)return;e.classList.add('out');setTimeout(function(){e.remove()},700)},1500)</script>
 <div id="bgc"><i class="bl b1"></i><i class="bl b2"></i></div>
 <div id="app">
  <div class="top"><button class="ib gl" id="back" hidden aria-label="رجوع"></button><h1 id="h1">المكتبة</h1><button class="ib gl" id="act" aria-label="إضافة"></button></div>

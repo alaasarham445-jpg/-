@@ -1,4 +1,4 @@
-const VERSION = 'v1.4.0';
+const VERSION = 'v1.5.0';
 const CACHE = 'watar-' + VERSION;
 const FONT_CACHE = 'watar-fonts';
 const FONT_CSS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap';
